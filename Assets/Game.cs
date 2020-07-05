@@ -4,8 +4,8 @@ using Sequence = System.Collections.IEnumerator;
 public sealed class Game : GameBase
 {
 
-  const int screen_width = 768;
-  const int screen_height = 1024;
+  const int screen_width = 1125;
+  const int screen_height = 2436;
 
   ////////////// PLAYER INFO /////////////
 
@@ -75,6 +75,8 @@ public sealed class Game : GameBase
   public override void UpdateGame()
   {
 
+
+
     if(is_game_over == true) {
       InitGame();
       return;
@@ -87,15 +89,30 @@ public sealed class Game : GameBase
 
     //////// PLAYER HIT EDGES OF SCREEN /////////////////
     if (player_x < 0) player_x = 0;
-    if (player_x > 720 - 20) player_x = 720 - 20;
+    if (player_x > screen_width - 20) player_x = screen_width - 20;
     if (player_y < 0) player_y = 0;
-    if (player_y > 1280 - 20) player_y = 1280 - 20;
+    if (player_y > screen_height - 20) player_y = screen_height - 20;
 
     time++;
     score = time / 60;
 
+
+
+
     for (int i = 0; i < box_num; i++) {
+
+      box_y[i] = box_y[i] + box_speed[i];
+
+      if(box_y[i] > screen_height) {
+        box_x[i] = gc.Random(0, screen_width - player_radius);
+        box_y[i] = -gc.Random(100, 480);
+        box_speed[i] = gc.Random(3, 8);
+        box_alive_flag[i] = true;
+      }
+
       if(gc.CheckHitRect((int)player_x, (int)player_y, 32, 32, box_x[i], box_y[i], box_width, box_height)) {
+        box_alive_flag[i] = false;
+
         if(box_type[i] == 0) {
           hp--;
         }
@@ -116,6 +133,9 @@ public sealed class Game : GameBase
       }
     }
 
+
+
+
   }
 
 
@@ -128,8 +148,11 @@ public sealed class Game : GameBase
     if(is_game_start == false && is_game_over == false) {
       gc.DrawRightString("TAP TO PLAY", screen_width / 2, screen_height / 2);
     } else if(is_game_start == true) {
+
       for (int i = 0; i < box_num; i++) {
 
+        if(box_alive_flag[i] == false) continue;
+        
         if(box_type[i] == 0) gc.SetColor(0,0,0);
         if(box_type[i] == 1) gc.SetColor(0,255,128);
         if(box_type[i] == 2) gc.SetColor(0,0,0);
@@ -138,6 +161,9 @@ public sealed class Game : GameBase
 
         gc.FillRect(box_x[i], box_y[i], box_width, box_height);
       }
+
+      gc.DrawImage(1, (int)player_x, (int)player_y);
+
       gc.SetColor(0,0,0);
       gc.DrawString("SCORE: " + score, 0, 36);
       gc.DrawString("HP: " + hp, 0, 64);
