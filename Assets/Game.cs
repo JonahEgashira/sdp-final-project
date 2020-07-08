@@ -15,7 +15,7 @@ public sealed class Game : GameBase {
 
   ////////////// BOX INFO //////////////
 
-  const int MAX_BOX_NUM = 50;
+  const int MAX_BOX_NUM = 100;
 
   int box_num = 10;
 
@@ -89,7 +89,9 @@ public sealed class Game : GameBase {
 
     // x 方向にしか動かないようにする
     if (player_x < 0) player_x = 0;
-    if (player_x > screen_width - 20) player_x = screen_width - 20;
+    if (player_x > screen_width - player_radius) {
+      player_x = screen_width - player_radius;
+    }
 
 
     // time , score , stageの処理
@@ -98,7 +100,7 @@ public sealed class Game : GameBase {
 
 
     box_num = (score + 10 - 1) / 10 * 10;
-    if(box_num > 50) box_num = 50;
+    if(box_num > MAX_BOX_NUM) box_num = MAX_BOX_NUM;
 
 
 
