@@ -15,85 +15,92 @@ public sealed class Game : GameBase {
 
   ////////////// BOX INFO //////////////
 
-  const int box_num = 10;
+  const int MAX_BOX_NUM = 50;
 
-  int[] box_x = new int[box_num];
-  int[] box_y = new int[box_num];
-  int[] box_speed = new int[box_num];
+  int box_num = 10;
+
+  int[] box_x = new int[MAX_BOX_NUM];
+  int[] box_y = new int[MAX_BOX_NUM];
+  int[] box_speed = new int[MAX_BOX_NUM];
 
   bool is_bomb_activated = false;
 
 
   ////////// TYPE //////////
-  // 0 : normal box (1 damage when hit)
-  // 1 : heal box (heal 1 hp when hit)
-  // 2 : shield box(take no damage for seconds)
-  // 3 : speed up
-  // 4 : bomb (destroy all boxes on screen)
+  // 0 : 普通の箱　当たると１ダメージ
+  // 1 : 回復ボックス　当たると１回復
+  // 2 : なににしようかな
+  // 3 : なににしようかな
+  // 4 : 爆弾 画面の箱全て消す
 
-  int[] box_type = new int[box_num];
-  bool[] box_alive_flag = new bool[box_num];
+  int[] box_type = new int[MAX_BOX_NUM];
+  bool[] box_alive_flag = new bool[MAX_BOX_NUM];
 
-  int box_width = 48;
-  int box_height = 48;
+  int box_width = 96;
+  int box_height = 96;
 
 
-  //////////// SCORE AND STAGE(LEVEL) //////////////
   int score = 0;
   int time = 0;
   int stage = 0;
-
-  //////////// GAME STATE AND TITLE SCREEN /////////
   int hp = 1;
-  bool is_game_start = true;
+  bool is_game_start = false;
   bool is_game_over = false;
 
   public override void InitGame() {
     gc.SetResolution(screen_width, screen_height);
-
-    // INITIALIZE BLOCKS 
-    for (int i = 0; i < box_num; i++) {
-      box_x[i] = gc.Random(0, screen_width - player_radius);
-      box_y[i] = -gc.Random(100, 480);
-      box_speed[i] = gc.Random(3, 8);
-      box_alive_flag[i] = true;
-
-      // GENERATE BOX TYPE 
-      int type = gc.Random(0, 100);
-      if (type <= 60) box_type[i] = 0;
-      else if (type <= 70) box_type[i] = 1;
-      else if (type <= 80) box_type[i] = 2;
-      else if (type <= 90) box_type[i] = 3;
-      else if (type <= 100) box_type[i] = 4;
-    }
+    init();
   }
+
+
+  ////////////////////////////////////////////////////////////
+
+
+
 
   public override void UpdateGame() {
 
-    if(is_game_over == true) {
-      if (gc.GetPointerFrameCount(0) == 1) {
-        InitGame();
-        is_game_over = false;
+    //ゲーム開始の最初の画面
+    if(is_game_start == false && is_game_over == false) {
+      if(gc.GetPointerFrameCount(0) == 1) {
+        init();
         is_game_start = true;
-      } 
+      }
+      return;
     }
 
+    // ゲームオーバー処理
+    if(is_game_over == true) {
+      if(gc.GetPointerFrameCount(0) == 1) {
+        init();
+        is_game_over = false;
+        is_game_start = true; 
+      }
+      return;
+    }
+
+    // 爆弾のアイテムを取ったとき
     is_bomb_activated = false;
 
-    //////// PLAYER MOVEMENT WITH ACCELERATION /////////
 
+    // プレイヤーの動き
     player_x += gc.AccelerationLastX * player_speed;
     // player_y -= gc.AccelerationLastY * player_speed;
 
-    //////// PLAYER HIT EDGES OF SCREEN /////////////////
+    // x 方向にしか動かないようにする
     if (player_x < 0) player_x = 0;
     if (player_x > screen_width - 20) player_x = screen_width - 20;
 
-    //if (player_y < 0) player_y = 0;
-    //if (player_y > screen_height - 20) player_y = screen_height - 20;
 
+    // time , score , stageの処理
     time++;
     score = time / 60;
+
+
+    box_num = (score + 10 - 1) / 10 * 10;
+    if(box_num > 50) box_num = 50;
+
+
 
     for (int i = 0; i < box_num; i++) {
 
@@ -140,17 +147,18 @@ public sealed class Game : GameBase {
 
     if(is_bomb_activated == true) {
       for (int i = 0; i < box_num; i++) {
-        box_y[i] = screen_height;
+        box_y[i] = screen_height + 100;
       }
     }
 
     if (hp <= 0) {
       is_game_over = true;
+      is_game_start = false;
     }
-
   }
 
 
+  ////////////////////////////////////////////////////////////
 
   public override void DrawGame() {
 
@@ -159,7 +167,9 @@ public sealed class Game : GameBase {
     gc.SetFontSize(36);
 
     if (is_game_start == false && is_game_over == false) {
-      gc.DrawRightString("TAP TO PLAY", screen_width / 2, screen_height / 2);
+      gc.DrawString("タップしてスタート", screen_width / 2 - 50, screen_height / 2);
+      gc.DrawString("かたむけて、よけろ！", screen_width / 2 - 50, screen_height / 2 + 100);
+
     } else if (is_game_start == true && is_game_over == false) {
 
       for (int i = 0; i < box_num; i++) {
@@ -182,10 +192,35 @@ public sealed class Game : GameBase {
       gc.DrawString("HP: " + hp, 0, 64);
 
     } else if (is_game_over == true) {
-      gc.DrawString("GAME OVER", screen_width / 2, screen_height / 2);
+      gc.DrawString("ゲームオーバー", screen_width / 2 - 50, screen_height / 2);
+      gc.DrawString("タップしてリトライ", screen_width / 2 - 50, screen_height / 2 + 100);
       gc.DrawString("SCORE: " + score, 0, 36);
       gc.DrawString("HP:" + hp, 0, 64);
     }
+
+  }
+
+  void init() {
+    // INITIALIZE BLOCKS 
+    for (int i = 0; i < MAX_BOX_NUM; i++) {
+      box_x[i] = gc.Random(0, screen_width - player_radius);
+      box_y[i] = -gc.Random(100, 480);
+      box_speed[i] = gc.Random(3, 8);
+      box_alive_flag[i] = true;
+
+      // GENERATE BOX TYPE 
+      int type = gc.Random(0, 100);
+      if (type <= 60) box_type[i] = 0;
+      else if (type <= 70) box_type[i] = 1;
+      else if (type <= 80) box_type[i] = 2;
+      else if (type <= 90) box_type[i] = 3;
+      else if (type <= 100) box_type[i] = 4;
+    }
+
+    hp = 1;
+    score = 0;
+    time = 0;
+    stage = 0;
 
   }
 
