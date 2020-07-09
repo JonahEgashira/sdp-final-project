@@ -11,7 +11,7 @@ public sealed class Game : GameBase {
   float player_y = screen_height - screen_height / 24;
   float player_speed = 20.0f;
 
-  const int DEFAULT_PLAYER_RADIUS = 120;
+  const int DEFAULT_PLAYER_RADIUS = 200;
   int player_radius = DEFAULT_PLAYER_RADIUS; // depends on the image
 
   ////////////// BOX INFO //////////////
@@ -86,11 +86,6 @@ public sealed class Game : GameBase {
       return;
     }
 
-    if(is_small_activated == 1) {
-      player_radius = DEFAULT_PLAYER_RADIUS / 2;
-    } else {
-      player_radius = DEFAULT_PLAYER_RADIUS;
-    }
 
     // 爆弾のアイテムを取ったとき
     is_bomb_activated = false;
@@ -104,8 +99,11 @@ public sealed class Game : GameBase {
     if(small_frame_count > 0) is_small_activated = 1;
     else is_small_activated = 0;
 
+    
     if(is_small_activated == 1) {
-      
+      player_radius = DEFAULT_PLAYER_RADIUS / 2;
+    } else {
+      player_radius = DEFAULT_PLAYER_RADIUS;
     }
 
     // プレイヤーの動き
@@ -146,7 +144,7 @@ public sealed class Game : GameBase {
         else if (type <= 100) box_type[i] = 4;
       }
  
-      if (gc.CheckHitRect((int)player_x, (int)player_y, player_radius / 2, player_radius / 2, box_x[i], box_y[i], box_width, box_height)) {
+      if (gc.CheckHitRect((int)player_x, (int)player_y, player_radius / 4 , player_radius / 2, box_x[i], box_y[i], box_width, box_height)) {
         if (box_alive_flag[i] == false) continue;
 
         if (box_type[i] == 0 && is_shield_activated == 0) {
@@ -158,12 +156,12 @@ public sealed class Game : GameBase {
         if (box_type[i] == 2 && is_small_activated == 0) {
           // SHIELD 
           // 取ってから一定時間の処理が必要
-          shield_frame_count += 180;
+          shield_frame_count += 360;
         }
         if (box_type[i] == 3 && is_shield_activated == 0) {
           // 小さくなる
           // 取ってから一定時間の処理
-          small_frame_count += 180;
+          small_frame_count += 360;
         }
         if (box_type[i] == 4) {
           // BOMB
@@ -285,6 +283,14 @@ public sealed class Game : GameBase {
     score = 0;
     time = 0;
     stage = 0;
+
+    player_radius = DEFAULT_PLAYER_RADIUS;
+
+    shield_frame_count = 0;
+    small_frame_count = 0;
+
+    is_shield_activated = 0;
+    is_small_activated = 0;
 
   }
 
